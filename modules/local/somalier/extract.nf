@@ -6,12 +6,13 @@ process EXTRACT {
     path(alignment_file)
     path(fasta)
     path(sites)
+    path(extract_sample_id)
 
     output:
     path('*somalier')
 
     script:
-    def extract_sample_cmd = task.ext.sample_id ?: ''
+    def extract_sample_cmd = extract_sample_id ? "export SOMALIER_SAMPLE_NAME=${extract_sample_id}; " : ''
     def extract_sample_prefix = task.ext.extract_sample_prefix ?: ''
     """
     $extract_sample_cmd
