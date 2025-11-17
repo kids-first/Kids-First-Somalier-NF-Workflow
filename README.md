@@ -1,22 +1,12 @@
-# KF Bixu Repository Template
+# Kids First DRC Somalier QC
+Somalier is a sample-swap and relatedness checker.
+Here, we have constructed a nextflow workflow to fit our needs for trio-based relatedness QC as well as patient-level QC from cancer-related sequencing.
 
-Use this template to bootstrap a new KF bixu repository 
 
-### Badges
+<p align="center">
+  <img src="docs/kids_first_logo.svg" alt="Kids First repository logo" width="660px" />
+</p>
+<p align="center">
+  <a href="https://github.com/kids-first/Kids-First-Somalier-NF-Workflow/blob/main/LICENSE"><img src="https://img.shields.io/github/license/kids-first/Kids-First-Somalier-NF-Workflow.svg?style=for-the-badge"></a>
+</p>
 
-Update the LICENSE badge to point to the new repo location on GitHub.
-Note that the LICENSE badge will fail to render correctly unless the repo has
-been set to **public**.
-
-Add additional badges for CI, docs, and other integrations as needed within the
-`<p>` tag next to the LICENSE.
-
-### Repo Description
-
-Update the repositories description with a short summary of the repository's
-intent.
-Include an appropriate emoji at the start of the summary.
-
-Add a handful of tags that summarize topics relating to the repository.
-If the repo has a documentation site or webpage, add it next to the repository
-description.
