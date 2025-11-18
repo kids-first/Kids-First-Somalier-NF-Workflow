@@ -3,10 +3,9 @@ process EXTRACT {
     container "brentp/somalier:v0.3.1"
 
     input:
-    path(alignment_file)
-    path(fasta)
+    tuple val(extract_sample_id), path(alignment_file), path(_alignment_index)
+    tuple path(fasta), path(_fai)
     path(sites)
-    path(extract_sample_id)
 
     output:
     path('*somalier')
@@ -18,7 +17,7 @@ process EXTRACT {
     $extract_sample_cmd
     somalier extract \\
     --fasta $fasta \\
-    --sites $sites
+    --sites $sites \\
     $extract_sample_prefix \\
     $alignment_file
     """

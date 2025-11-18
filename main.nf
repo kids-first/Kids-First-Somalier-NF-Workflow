@@ -5,22 +5,31 @@ include { RELATE } from './modules/local/somalier/relate.nf'
 
 workflow {
     main:
-    alignment_file = params.alignment_file ? Channel.fromPath(params.alignment_file) : Channel.value([]) // BAM/CRAM file if somalier binary not available
-    somalier_binary = params.somalier_binary ? Channel.value(params.somalier_binary) : Channel.value([]) // Use if extract already previously run
+    // extract
+    alignment_file = params.alignment_file ? Channel.fromPath(params.alignment_file) : Channel.empty() // BAM/CRAM file if somalier binary not available
+    alignment_index = params.alignment_index ? Channel.fromPath(params.alignment_index) : Channel.empty() // BAM/CRAM index if somalier binary not available
     fasta = params.fasta ? Channel.fromPath(params.fasta) : Channel.value([]) // extract requires fasta
-    sites = params.sites ? Channel.fromPath(params.sites) : Channel.value([]) // extract requires sites
-    extract_sample_id = params.extract_sample_id ? Channel.value(params.extract_sample_id) : Channel.value([]) // optional to rename extract inputs
+    fai = params.fai ? Channel.fromPath(params.fai) : Channel.value([]) // extract requires fai
+    sites = params.sites ? Channel.fromPath(params.sites).collect() : Channel.value([]) // extract requires sites
+    extract_sample_id = params.extract_sample_id ? Channel.fromList(params.extract_sample_id) : Channel.value([]) // optional to rename extract inputs
+    // relate
+    somalier_binary = params.somalier_binary ? Channel.fromPath(params.somalier_binary) : Channel.value([]) // Use if extract already previously run
+    groups_tsv = params.groups_tsv ? Channel.fromPath(params.groups_tsv) : Channel.value([])
+    ped = params.ped ? Channel.fromPath(params.ped) : Channel.value([])
 
-    if (params.alignment_file){
-        somalier_files = EXTRACT(
-            alignment_file: alignment_file,
-            fasta: fasta,
-            sites: sites,
-            extract_sample_id: extract_sample_id
+    align_index = extract_sample_id.merge(alignment_file).merge(alignment_index)
+    fasta_fai = fasta.merge(fai).collect()
+    align_index.view()
+    EXTRACT(
+            align_index,
+            fasta_fai,
+            sites
         )
-    }
-    somalier_binary.concat(somalier_files)
+    somalier_binary = EXTRACT.out.concat(somalier_binary).collect()
+    somalier_binary.view()
     RELATE(
-        somalier_file: somalier_binary
+        somalier_binary,
+        groups_tsv,
+        ped
     )
 }
