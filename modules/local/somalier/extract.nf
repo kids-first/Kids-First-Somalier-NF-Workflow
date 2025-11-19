@@ -3,9 +3,10 @@ process EXTRACT {
     container "brentp/somalier:v0.3.1"
 
     input:
-    tuple val(extract_sample_id), path(alignment_file), path(_alignment_index)
+    tuple path(alignment_file), path(_alignment_index)
     tuple path(fasta), path(_fai)
     path(sites)
+    val(extract_sample_id)
 
     output:
     path('*somalier')

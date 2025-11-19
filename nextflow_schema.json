@@ -133,6 +133,11 @@
             "type": "string",
             "description": "somalier extract, array of added prefix to give to sample IDs"
         },
+        "extract_only": {
+            "type": "boolean",
+            "description": "run only extract tool",
+            "fa_icon": "fas fa-toggle-on"
+        },
         "groups_tsv": {
             "type": "string",
             "format": "file-path",

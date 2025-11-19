@@ -4,12 +4,17 @@ include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
 
 def validate_inputs(param_obj){
+    def non_empty_param_keys = param_obj.findAll { _key, value -> 
+    value != null && value != ""
+    }.keySet()
+    println(non_empty_param_keys)
     if (param_obj.alignment_file){
         def required_options = [ 'alignment_index', 'fasta', 'fai', 'sites' ]
-        required_options.each{ opt ->
-            if (!param_obj[opt]){
-                error "When providing 'alignment_file', you must also provide '${required_options}'. You are missing $opt" 
-            }
+        println(required_options)
+        def missing = required_options.findAll { !non_empty_param_keys.contains(it) }
+        println(missing)
+        if (missing){
+            error "When providing 'alignment_file', you must also provide '${required_options}'. You are missing $missing" 
         }
     }
 }
@@ -30,17 +35,20 @@ workflow {
 
     validate_inputs(params)
 
-    align_index = extract_sample_id.merge(alignment_file).merge(alignment_index)
+    align_index = alignment_file.merge(alignment_index)
     fasta_fai = fasta.merge(fai).collect()
     EXTRACT(
             align_index,
             fasta_fai,
-            sites
+            sites,
+            extract_sample_id
         )
-    somalier_binary = EXTRACT.out.concat(somalier_binary).collect()
-    RELATE(
-        somalier_binary,
-        groups_tsv,
-        ped
-    )
+    if(!params.extract_only){
+        somalier_binary = EXTRACT.out.concat(somalier_binary).collect()
+        RELATE(
+            somalier_binary,
+            groups_tsv,
+            ped
+        )
+    }
 }

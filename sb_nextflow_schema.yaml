@@ -35,6 +35,8 @@ doc: '# Kids First DRC Somalier QC
 hints:
 -   class: sbg:NextflowExecutionMode
     value: multi-instance
+-   class: "sbg:maxNumberOfParallelInstances"
+    value: 3
 arguments:
 -   position: 0
     shellQuote: false
@@ -99,6 +101,16 @@ inputs:
     - 'null'
     - type: array
       items: string
+-   id: extract_only
+    inputBinding:
+        prefix: --extract_only
+    doc: run only extract tool
+    sbg:icon: fas fa-toggle-on
+    default: false
+    type:
+    - 'null'
+    - boolean
+
 -   format: text/tab-separated-values
     id: groups_tsv
     inputBinding:
