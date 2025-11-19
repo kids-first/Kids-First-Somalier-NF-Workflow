@@ -3,6 +3,17 @@
 include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
 
+def validate_inputs(param_obj){
+    if (param_obj.alignment_file){
+        def required_options = [ 'alignment_index', 'fasta', 'fai', 'sites' ]
+        required_options.each{ opt ->
+            if (!param_obj[opt]){
+                error "When providing 'alignment_file', you must also provide '${required_options}'. You are missing $opt" 
+            }
+        }
+    }
+}
+
 workflow {
     main:
     // extract
@@ -17,16 +28,16 @@ workflow {
     groups_tsv = params.groups_tsv ? Channel.fromPath(params.groups_tsv) : Channel.value([])
     ped = params.ped ? Channel.fromPath(params.ped) : Channel.value([])
 
+    validate_inputs(params)
+
     align_index = extract_sample_id.merge(alignment_file).merge(alignment_index)
     fasta_fai = fasta.merge(fai).collect()
-    align_index.view()
     EXTRACT(
             align_index,
             fasta_fai,
             sites
         )
     somalier_binary = EXTRACT.out.concat(somalier_binary).collect()
-    somalier_binary.view()
     RELATE(
         somalier_binary,
         groups_tsv,
