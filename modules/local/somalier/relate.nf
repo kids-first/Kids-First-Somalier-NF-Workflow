@@ -4,7 +4,7 @@ process RELATE {
 
     input:
     path(somalier_file)
-    path(groups_tsv) 
+    path(groups_csv) 
     path(ped)
 
     output:
@@ -15,7 +15,7 @@ process RELATE {
 
     script:
     def somalier_ext_args = task.ext.args ?: ''
-    def input_file_args = groups_tsv ? "--groups $groups_tsv" : ''
+    def input_file_args = groups_csv ? "--groups $groups_csv" : ''
     input_file_args += ped ? " --ped $ped" : ''
 
     """
