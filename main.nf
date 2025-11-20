@@ -41,10 +41,7 @@ workflow {
             sites,
             extract_sample_id
         )
-    if(params.extract_only){
-        println("Extract only flag is set to true; skipping RELATE step")
-    }
-    else{
+    if(!params.extract_only){
         somalier_binary = EXTRACT.out.concat(somalier_binary).collect()
         RELATE(
             somalier_binary,

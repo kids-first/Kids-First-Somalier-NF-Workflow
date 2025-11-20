@@ -26,7 +26,7 @@ doc: |
     The workflow is designed to run `extract` to create the somalier extracted sites file if needed (from alignment), then run `relate` to get various relatedness, sex, and sample-swap QC metrics.
     Having the workflow runs `extract` + `relate` requires that _all input alignment files be aligned to the same reference_.
     Otherwise, `extract` should be run separately.
-    The `.somalier` formatted files can br provided directly as well, and are worth keeping as they are fairly small and can be used for future comparisons and ancestry predictions (not in this workflow).
+    The `.somalier` formatted files can be provided directly as well, and are worth keeping as they are fairly small and can be used for future comparisons and ancestry predictions (not in this workflow).
     Below, some common intended usage scenarios are laid out
 
     ## Relatedness check
