@@ -1,0 +1,183 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/./master/nextflow_schema.json",
+    "title": "Kids First Somalier NF Workflow Params",
+    "description": "",
+    "type": "object",
+    "definitions": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data and save output data.",
+            "properties": {
+                "outdir": {
+                    "type": "string",
+                    "description": "Path to the output directory where the results will be saved.",
+                    "default": "./results",
+                    "fa_icon": "fas fa-folder-open",
+                    "hidden": true,
+                    "format": "directory-path"
+                }
+            }
+        },
+        "reference_genome_options": {
+            "title": "Reference genome options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Reference genome related files and options required for the workflow.",
+            "properties": {
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "description": "Path to FASTA genome file.",
+                    "help_text": "This parameter is *mandatory* if alignment_file input given for somalier extract",
+                    "fa_icon": "far fa-file-code"
+                }
+            }
+        },
+        "max_job_request_options": {
+            "title": "Max job request options",
+            "type": "object",
+            "fa_icon": "fab fa-acquisitions-incorporated",
+            "description": "Set the top limit for requested resources for any single job.",
+            "help_text": "If you are running on a smaller system, a pipeline step requesting more resources than are available may cause the Nextflow to stop the run with an error. These options allow you to cap the maximum resources requested by any single job so that the pipeline will run on your system.\n\nNote that you can not _increase_ the resources requested by any job using these options. For that you will need your own configuration file. See [the nf-core website](https://nf-co.re/usage/configuration) for details.",
+            "properties": {
+                "max_cpus": {
+                    "type": "integer",
+                    "description": "Maximum number of CPUs that can be requested for any single job.",
+                    "default": 16,
+                    "fa_icon": "fas fa-microchip",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
+                },
+                "max_memory": {
+                    "type": "string",
+                    "description": "Maximum amount of memory that can be requested for any single job.",
+                    "default": "128.GB",
+                    "fa_icon": "fas fa-memory",
+                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`"
+                },
+                "max_time": {
+                    "type": "string",
+                    "description": "Maximum amount of time that can be requested for any single job.",
+                    "default": "240.h",
+                    "fa_icon": "far fa-clock",
+                    "pattern": "^(\\d+\\.?\\s*(s|m|h|day)\\s*)+$",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`"
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/reference_genome_options"
+        },
+        {
+            "$ref": "#/$defs/max_job_request_options"
+        }
+    ],
+    "properties": {
+        "alignment_file": {
+            "type": "string",
+            "format": "file-path",
+            "mimetype": "application/octet-stream",
+            "pattern": "^\\S+\\.(cram|bam)$",
+            "help_text": "Alignment file to create somalier binaries, if needed for somalier extract",
+            "fa_icon": "fas fa-align-center"
+        },
+        "alignment_index": {
+            "type": "string",
+            "format": "file-path",
+            "pattern": "^\\S+\\.(bai|crai)$",
+            "mimetype": "application/octet-stream",
+            "help_text": "Path to alignment index. Required if somalier extract is to be run"
+        },
+        "somalier_binary": {
+            "type": "string",
+            "pattern": "^\\S+\\\\.somalier$",
+            "format": "file-path",
+            "mimetype": "application/octet-stream",
+            "help_text": "sample data in somalier format generated by a previous run of extract"
+        },
+        "fai": {
+            "type": "string",
+            "format": "file-path",
+            "mimetype": "text/plain",
+            "pattern": "^\\S+\\.fai$",
+            "help_text": "Path to FASTA index file.. This parameter is *mandatory* if alignment_file input given for somalier extract"
+        },
+        "sites": {
+            "type": "string",
+            "format": "file-path",
+            "mimetype": "text/plain",
+            "pattern": "^\\S+\\\\.vcf.gz$",
+            "help_text": "Path to sites somalier sites VCF file. This parameter is *mandatory* if alignment_file input given for somalier extract"
+        },
+        "extract_sample_id": {
+            "type": "string",
+            "description": "somalier extract, list of sample IDs to assign if different from input alignment. If changing one, must provide all"
+        },
+        "extract_sample_prefix": {
+            "type": "string",
+            "description": "somalier extract, array of added prefix to give to sample IDs"
+        },
+        "extract_only": {
+            "type": "boolean",
+            "description": "run only extract tool",
+            "fa_icon": "fas fa-toggle-on"
+        },
+        "groups_csv": {
+            "type": "string",
+            "format": "file-path",
+            "mimetype": "text/tab-separated-values",
+            "description": "somalier relate optional path to expected groups of samples (e.g. tumor normal pairs). A group file is specified as comma-separated groups per line",
+            "fa_icon": "fas fa-layer-group"
+        },
+        "ped": {
+            "type": "string",
+            "pattern": "^\\S+\\.ped$",
+            "format": "file-path",
+            "mimetype": "text/tab-separated-values",
+            "description": "somalier relate optional path to a PED/fam file indicating the expected relationships among samples",
+            "fa_icon": "fas fa-users"
+        },
+        "min_depth": {
+            "type": "integer",
+            "default": 7,
+            "description": "somalier relate only genotype sites with at least this depth"
+        },
+        "min_ab": {
+            "type": "number",
+            "description": "somalier relate hets sites must be between min-ab and 1 - min_ab. set this to 0.2 for RNA-Seq data (default: 0.3)",
+            "default": 0.3
+        },
+        "infer": {
+            "type": "boolean",
+            "description": "somalier relate infer relationships",
+            "fa_icon": "fas fa-search"
+        },
+        "unknown": {
+            "type": "boolean",
+            "description": "set unknown genotypes to hom-ref. It is often preferable to use this with VCF samples that were not jointly called"
+        },
+        "output_prefix": {
+            "type": "string",
+            "description": "Output prefix for somalier relate results"
+        },
+        "aws_test_instance": {
+            "type": "boolean"
+        },
+        "sbg_run": {
+            "type": "boolean"
+        }
+    }
+}

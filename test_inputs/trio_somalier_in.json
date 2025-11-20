@@ -1,0 +1,10 @@
+{
+    "somalier_binary": ["/home/ubuntu/volume/SOMALIER/NF_TESTING/work/65/b1ea60dabf0f729eed1497979a3661/BS_7P4VH4AR.somalier",
+                        "/home/ubuntu/volume/SOMALIER/NF_TESTING/work/52/47101c5f4005ebd8b659691f71ce65/BS_F3QBHFGD.somalier",
+                        "/home/ubuntu/volume/SOMALIER/NF_TESTING/work/97/ef57ea6781763095278f51a4a8be87/BS_RQGMWB4X.somalier"
+    ],
+    "ped": "FM_GMR4YWCP.ped",
+    "infer": true,
+    "output_prefix": "FM_GMR4YWCP",
+    "aws_test_instance": true
+}

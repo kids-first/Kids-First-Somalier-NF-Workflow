@@ -1,0 +1,305 @@
+app_content:
+    entrypoint: main.nf
+class: nextflow
+cwlVersion: None
+executor_version: 23.04.1
+requirements:
+-   class: InlineJavascriptRequirement
+-   class: ShellCommandRequirement
+-   class: InitialWorkDirRequirement
+    listing:
+    - entryname: input_params.json
+      entry: |
+          $(JSON.stringify({
+          extract_sample_id: inputs.extract_sample_id ? inputs.extract_sample_id : "",
+          alignment_file: inputs.alignment_file ? inputs.alignment_file.map(function(e) {return e.path}) : "",
+          alignment_index: inputs.alignment_index ? inputs.alignment_index.map(function(e) {return e.path}) : "",
+          somalier_binary: inputs.somalier_binary ? inputs.somalier_binary.map(function(e) {return e.path}) : "",
+          extract_sample_prefix: inputs.extract_sample_prefix ? inputs.extract_sample_prefix : ""
+          }))
+doc: |
+    # Kids First DRC Somalier QC
+    Somalier ([git repo](https://github.com/brentp/somalier/tree/v0.3.1), [publication](https://pmc.ncbi.nlm.nih.gov/articles/PMC7362544/)) is a sample-swap and relatedness checker.
+    Here, we have constructed a nextflow workflow to fit our needs for trio-based relatedness QC as well as patient-level QC from cancer-related sequencing.
+
+    ## Overview
+    The workflow is designed to run `extract` to create the somalier extracted sites file if needed (from alignment), then run `relate` to get various relatedness, sex, and sample-swap QC metrics.
+    Having the workflow runs `extract` + `relate` requires that _all input alignment files be aligned to the same reference_.
+    Otherwise, `extract` should be run separately.
+    The `.somalier` formatted files can be provided directly as well, and are worth keeping as they are fairly small and can be used for future comparisons and ancestry predictions (not in this workflow).
+    Below, some common intended usage scenarios are laid out
+
+    ## Relatedness check
+    Most commonly used for trios, can be expanded to include siblings.
+
+    ### All samples have extracted site files
+    #### Required
+    - `somalier_binary`: List of previously created somalier extracted sites files. Should have extension `.somalier`
+    #### `relate` Recommended
+    - `ped`: Pedigree file, Described [here](https://gatk.broadinstitute.org/hc/en-us/articles/360035531972-PED-Pedigree-format)
+    - `infer` Flag to infer relationships as a check/correction if different from input
+    - `output_prefix`: Set file name prefix. Default is `somalier.`
+    #### `relate` Optional
+    - `min_depth`: only genotype sites with at least this depth. Default 7
+    - `min_ab`: hets sites must be between min-ab and 1 - min_ab. set this to 0.2 for RNA-Seq data (default: 0.3)
+    - `unknown`: set unknown genotypes to hom-ref
+    ### None or some have extracted site files
+    For those missing `.somalier` files, if all have the same reference genome
+    #### `extract` Required
+    - `alignment_file`: List of alignment files to create somalier binaries
+    - `alignment_index`: List of alignment file indices to create somalier binaries
+    - `fasta`: FASTA reference genome
+    - `fai` FASTA Index
+    - `sites`: Path to sites somalier sites VCF file. Prebuilt accessible from somalier repo
+    #### `extract` Optional
+    - `extract_sample_id`: If desired sample ID is different from `SM` in alignment read group, provide here as a list for _all_
+    - `extract_sample_prefix`: Prefix existing samples IDs. Could be useful to tag all with a family ID?
+    ### You have mixed reference genomes, or just want somalier site files, no checks
+    For each set of alignment inputs with the same genome reference, you need at least all from [`extract` Required](#extract-required) and:
+    - `extract_only`: true
+
+    ## Sample swap check
+    Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some have extracted sites, follow the guidelines from [here](#none-or-some-have-extracted-site-files)
+    ### All samples have extracted site files
+    #### Required
+    - `somalier_binary`: List of previously created somalier extracted sites files. Should have extension `.somalier`
+    #### `relate` Recommended
+    - `groups_csv`: somalier relate optional path to expected groups of samples (e.g. tumor normal pairs). A group file is specified as comma-separated groups per line
+    - `output_prefix`: Set file name prefix. Default is `somalier.`
+
+    ## Outputs
+    ### `extract`
+    - `*.somalier`: List of extracted sites files. Necessary/recommended for repeated analyses using the somalier suite
+    ### `relate`
+    - `.html`: interactive html with various QA metrics plots
+    - `.samples.tsv`: .ped like file with extra QC columns
+    - `.pairs.tsv`: shows IBS (identity by state) for all possible sample pairs
+    - `.groups.tsv`: shows pairs of samples above a certain relatedness
+hints:
+-   class: sbg:NextflowExecutionMode
+    value: multi-instance
+-   class: "sbg:maxNumberOfParallelInstances"
+    value: 3
+arguments:
+-   position: 0
+    shellQuote: false
+    valueFrom: >
+        -params-file input_params.json
+inputs:
+-   doc: Alignment file to create somalier binaries, if needed for somalier extract
+    format: application/octet-stream
+    id: alignment_file
+    sbg:icon: fas fa-align-center
+    sbg:pattern: ^\S+\.(cram|bam)$
+    type:
+    - 'null'
+    - type: array
+      items: File
+-   format: application/octet-stream
+    id: alignment_index
+    doc: Path to alignment index. Required if somalier extract is to be run
+    sbg:pattern: ^\S+\.(bai|crai)$
+    type:
+    - 'null'
+    - type: array
+      items: File
+-   format: application/octet-stream
+    id: somalier_binary
+    doc: sample data in somalier format generated by a previous run of extract
+    sbg:pattern: ^\S+\\.somalier$
+    type:
+    - 'null'
+    - type: array
+      items: File
+-   doc: This parameter is *mandatory* if alignment_file input given for somalier
+        extract
+    format: text/plain
+    id: fai
+    inputBinding:
+        prefix: --fai
+    sbg:pattern: ^\S+\.fai$
+    type:
+    - 'null'
+    - File
+-   doc: This parameter is *mandatory* if alignment_file input given for somalier
+        extract
+    format: text/plain
+    id: sites
+    inputBinding:
+        prefix: --sites
+    sbg:pattern: ^\S+\\.vcf.gz$
+    type:
+    - 'null'
+    - File
+-   id: extract_sample_id
+    doc: somalier extract, list of sample IDs to assign if different from input
+        alignment. If changing one, must provide all
+    type:
+    - 'null'
+    - type: array
+      items: string
+-   id: extract_sample_prefix
+    doc: somalier extract, array of added prefix to give to sample IDs
+    type:
+    - 'null'
+    - type: array
+      items: string
+-   id: extract_only
+    inputBinding:
+        prefix: --extract_only
+    doc: run only extract tool
+    sbg:icon: fas fa-toggle-on
+    default: false
+    type:
+    - 'null'
+    - boolean
+
+-   format: text/tab-separated-values
+    id: groups_csv
+    inputBinding:
+        prefix: --groups_csv
+    doc: sommelier relate optional path to expected groups of samples (e.g. tumor
+        normal pairs). .A group file is specified as comma-separated groups per line
+    sbg:icon: fas fa-layer-group
+    type:
+    - 'null'
+    - File
+-   format: text/tab-separated-values
+    id: ped
+    inputBinding:
+        prefix: --ped
+    doc: somalier relate optional path to a PED/fam file indicating the expected
+        relationships among samples
+    sbg:icon: fas fa-users
+    sbg:pattern: ^\S+\.ped$
+    type:
+    - 'null'
+    - File
+-   id: min_depth
+    inputBinding:
+        prefix: --min_depth
+    doc: somalier relate only genotype sites with at least this depth
+    default: 7
+    type:
+    - 'null'
+    - int
+-   id: min_ab
+    inputBinding:
+        prefix: --min_ab
+    doc: 'somalier relate hets sites must be between min-ab and 1 - min_ab. set
+        this to 0.2 for RNA-Seq data (default: 0.3)'
+    default: 0.3
+    type:
+    - 'null'
+    - float
+-   id: infer
+    inputBinding:
+        prefix: --infer
+    doc: somalier relate infer relationships
+    sbg:icon: fas fa-search
+    type:
+    - 'null'
+    - boolean
+-   id: unknown
+    inputBinding:
+        prefix: --unknown
+    doc: set unknown genotypes to hom-ref. It is often preferable to use this with
+        VCF samples that were not jointly called
+    type:
+    - 'null'
+    - boolean
+-   id: output_prefix
+    inputBinding:
+        prefix: --output_prefix
+    doc: Output prefix for somalier relate results
+    type:
+    - 'null'
+    - string
+-   id: sbg_run
+    doc: Flag to enable seven bridges platform features
+    inputBinding:
+        prefix: --sbg_run
+    default: true
+    sbg:hidden: true
+    type:
+    - 'null'
+    - boolean
+-   id: outdir
+    inputBinding:
+        prefix: --outdir
+    label: Path to the output directory where the results will be saved.
+    sbg:category: Input/output options
+    sbg:hidden: true
+    sbg:icon: fas fa-folder-open
+    default: ./results
+    type: 'string?'
+-   doc: This parameter is *mandatory* if alignment_file input given for somalier
+        extract
+    format: text/plain
+    id: fasta
+    inputBinding:
+        prefix: --fasta
+    sbg:category: Reference genome options
+    sbg:icon: far fa-file-code
+    sbg:pattern: ^\S+\.fn?a(sta)?(\.gz)?$
+    type:
+    - 'null'
+    - File
+-   doc: Use to set an upper-limit for the CPU requirement for each process. Should
+        be an integer e.g. `--max_cpus 1`
+    id: max_cpus
+    inputBinding:
+        prefix: --max_cpus
+    label: Maximum number of CPUs that can be requested for any single job.
+    sbg:category: Max job request options
+    sbg:hidden: true
+    sbg:icon: fas fa-microchip
+    default: 16
+    type:
+    - 'null'
+    - int
+-   doc: Use to set an upper-limit for the memory requirement for each process. Should
+        be a string in the format integer-unit e.g. `--max_memory '8.GB'`
+    id: max_memory
+    inputBinding:
+        prefix: --max_memory
+    label: Maximum amount of memory that can be requested for any single job.
+    sbg:category: Max job request options
+    sbg:hidden: true
+    sbg:icon: fas fa-memory
+    sbg:pattern: ^\d+(\.\d+)?\.?\s*(K|M|G|T)?B$
+    default: 128.GB
+    type:
+    - 'null'
+    - string
+-   doc: Use to set an upper-limit for the time requirement for each process. Should
+        be a string in the format integer-unit e.g. `--max_time '2.h'`
+    id: max_time
+    inputBinding:
+        prefix: --max_time
+    label: Maximum amount of time that can be requested for any single job.
+    sbg:category: Max job request options
+    sbg:hidden: true
+    sbg:icon: far fa-clock
+    sbg:pattern: ^(\d+\.?\s*(s|m|h|day)\s*)+$
+    default: 240.h
+    type:
+    - 'null'
+    - string
+
+outputs:
+-   doc: Output from somalier relate
+    id: relate
+    outputBinding:
+        glob: 'results/relate/*'
+    type:
+    -   items: File
+        type: array
+-   doc: Output from somalier extract
+    id: extract
+    outputBinding:
+        glob: 'results/extract/*'
+    type:
+    - 'null'
+    -   items: File
+        type: array

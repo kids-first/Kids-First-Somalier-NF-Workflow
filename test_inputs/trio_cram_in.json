@@ -1,0 +1,18 @@
+{
+    "alignment_file": ["/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/e97ea1e7-b7c5-4b5c-a46f-6334f9468539.cram",
+                        "/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/1221297_D1.cram",
+                        "/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/1221298_D1.cram"
+    ],
+    "alignment_index": ["/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/e97ea1e7-b7c5-4b5c-a46f-6334f9468539.cram.crai",
+                        "/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/1221297_D1.cram.crai",
+                        "/home/ubuntu/volume/SB/projects/d3b-bixu/d3b-somalier-tools-dev/1221298_D1.cram.crai"
+    ],
+    "fasta": "/home/ubuntu/volume/trisomy/COMPARE_NOVEL/Homo_sapiens_assembly38.fasta",
+    "fai": "/home/ubuntu/volume/trisomy/COMPARE_NOVEL/Homo_sapiens_assembly38.fasta.fai",
+    "sites": "sites.hg38.vcf.gz",
+    "ped": "FM_GMR4YWCP.ped",
+    "extract_sample_id": ["BS_RQGMWB4X", "BS_7P4VH4AR", "BS_F3QBHFGD"],
+    "infer": true,
+    "output_prefix": "FM_GMR4YWCP",
+    "aws_test_instance": true
+}
