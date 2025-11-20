@@ -4,6 +4,9 @@ include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
 
 def validate_inputs(param_obj){
+    if (params.extract_only){
+        println("extract_only flag give, will skip RELATE step")
+    }
     def non_empty_param_keys = param_obj.findAll { _key, value -> 
     value != null && value != ""
     }.keySet()
@@ -19,6 +22,7 @@ def validate_inputs(param_obj){
 
 workflow {
     main:
+    validate_inputs(params)
     // extract
     alignment_file = params.alignment_file ? channel.fromPath(params.alignment_file) : channel.empty() // BAM/CRAM file if somalier binary not available
     alignment_index = params.alignment_index ? channel.fromPath(params.alignment_index) : channel.empty() // BAM/CRAM index if somalier binary not available
@@ -30,8 +34,6 @@ workflow {
     somalier_binary = params.somalier_binary ? channel.fromPath(params.somalier_binary) : channel.value([]) // Use if extract already previously run
     groups_csv = params.groups_csv ? channel.fromPath(params.groups_csv) : channel.value([])
     ped = params.ped ? channel.fromPath(params.ped) : channel.value([])
-
-    validate_inputs(params)
 
     align_index = alignment_file.merge(alignment_index)
     fasta_fai = fasta.merge(fai).collect()
