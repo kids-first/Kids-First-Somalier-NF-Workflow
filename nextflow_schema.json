@@ -173,6 +173,11 @@
             "type": "string",
             "description": "Output prefix for somalier relate results"
         },
+        "swap_threshold": {
+            "type": "number",
+            "default": 0.8,
+            "description": "Relatedness threshold to consider samples as related in sample swap check"
+        },
         "aws_test_instance": {
             "type": "boolean"
         },

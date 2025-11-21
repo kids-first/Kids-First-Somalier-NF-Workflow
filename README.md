@@ -54,6 +54,8 @@ Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some
 #### `relate` Recommended
 - `groups_csv`: somalier relate optional path to expected groups of samples (e.g. tumor normal pairs). A group file is specified as comma-separated groups per line
 - `output_prefix`: Set file name prefix. Default is `somalier.`
+#### `result interpret`
+- `swap_threshold`: Relatedness threshold to consider samples as related in sample swap check. Default `0.8`
 
 ## Outputs
 ### `extract`

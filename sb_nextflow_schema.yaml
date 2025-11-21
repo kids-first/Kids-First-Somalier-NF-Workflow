@@ -66,6 +66,8 @@ doc: |
     #### `relate` Recommended
     - `groups_csv`: somalier relate optional path to expected groups of samples (e.g. tumor normal pairs). A group file is specified as comma-separated groups per line
     - `output_prefix`: Set file name prefix. Default is `somalier.`
+    #### `result interpret`
+    - `swap_threshold`: Relatedness threshold to consider samples as related in sample swap check. Default `0.8`
 
     ## Outputs
     ### `extract`
@@ -221,6 +223,15 @@ inputs:
     type:
     - 'null'
     - string
+-   id: swap_threshold
+    inputBinding:
+        prefix: --swap_threshold
+    doc: 'Relatedness threshold to consider samples as related in sample swap check'
+    default: 0.8
+    type:
+    - 'null'
+    - float
+
 -   id: sbg_run
     doc: Flag to enable seven bridges platform features
     inputBinding:

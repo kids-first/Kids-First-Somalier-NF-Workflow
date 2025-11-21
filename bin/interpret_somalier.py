@@ -23,6 +23,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-prefix", help="Prefix for output error files", default="somalier_interpret"
     )
+    parser.add_argument("--swap-threshold", help="Relatedness threshold for sample swaps",
+                        type=float, default=0.8)
     return parser.parse_args()
 
 
@@ -103,7 +105,7 @@ def check_ped(ped_file: str, samples_tsv: str, out: str) -> None:
         print("No relationship and/or sex errors found.", file=sys.stderr)
 
 
-def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str) -> None:
+def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str, swap_t: float = 0.8) -> None:
     """Check for sample swaps using groups CSV and groups TSV files.
 
     group csv simply has all sample from same patient together as a csv per line.
@@ -114,6 +116,8 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str) -> None:
     Args:
         groups_csv (str): Path to groups CSV file
         groups_tsv (str): Path to groups TSV file
+        out (str): Output prefix for error file
+        swap_t (float): Relatedness threshold to consider samples as related
 
     """
     with open(groups_csv) as csv_f, open(groups_tsv) as tsv_f:
@@ -126,14 +130,17 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str) -> None:
         # Read output groups TSV
         tsv_groups: dict[str, set[str]] = {}
         for line in tsv_f:
-            sample_csv, _relatedness = line.strip().split("\t")
+            sample_csv, relatedness = line.strip().split("\t")
             sample_a, sample_b = sample_csv.split(",")
-            if sample_a in csv_groups:
-                index_sample = sample_a
-                comparator_sample = sample_b
-            elif sample_b in csv_groups:
-                index_sample = sample_b
-                comparator_sample = sample_a
+            if float(relatedness) >= swap_t:
+                if sample_a in csv_groups:
+                    index_sample = sample_a
+                    comparator_sample = sample_b
+                elif sample_b in csv_groups:
+                    index_sample = sample_b
+                    comparator_sample = sample_a
+                else:
+                    continue
             else:
                 continue
             if index_sample not in tsv_groups:
@@ -168,7 +175,8 @@ def main() -> None:
                 f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}",
                 file=sys.stderr,
             )
-            check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix)
+            check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix,
+                               args.swap_threshold)
     else:
         print(
             "Insufficient arguments provided. Please provide either PED and samples TSV "
