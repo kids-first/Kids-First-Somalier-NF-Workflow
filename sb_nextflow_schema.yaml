@@ -75,6 +75,12 @@ doc: |
     - `.samples.tsv`: .ped like file with extra QC columns
     - `.pairs.tsv`: shows IBS (identity by state) for all possible sample pairs
     - `.groups.tsv`: shows pairs of samples above a certain relatedness
+    ### `result interpret`
+    Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on group input).
+    For each situation, if no issues are found, no file is generated.
+    - `.somalier_relation_errors.tsv`: has any issues by sample in relationship or sex found
+    - `.somalier_sample_swap_errors.tsv`: Compared to input groups, outputs which samples failed to match
+
 hints:
 -   class: sbg:NextflowExecutionMode
     value: multi-instance
@@ -299,6 +305,14 @@ outputs:
     id: extract
     outputBinding:
         glob: 'results/extract/*'
+    type:
+    - 'null'
+    -   items: File
+        type: array
+-   doc: Output from somalier interpretation
+    id: result_interpret
+    outputBinding:
+        glob: 'results/result_interpret/*'
     type:
     - 'null'
     -   items: File

@@ -2,6 +2,7 @@
 
 include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
+include { RESULT_INTERPRET } from './modules/local/python/somalier_result_interpretation.nf'
 
 def validate_inputs(param_obj){
     if (params.extract_only){
@@ -51,4 +52,10 @@ workflow {
             ped
         )
     }
+    RESULT_INTERPRET(
+        ped,
+        RELATE.out.samples_tsv,
+        groups_csv,
+        RELATE.out.groups_tsv
+    )
 }

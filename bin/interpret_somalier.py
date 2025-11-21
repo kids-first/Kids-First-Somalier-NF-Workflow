@@ -20,13 +20,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--samples-tsv", help="Output samples TSV file from somalier")
     parser.add_argument("--groups-csv", help="Input groups CSV file for sample swaps")
     parser.add_argument("--groups-tsv", help="Output groups TSV file from somalier")
-    parser.add_argument("--output-prefix", help="Prefix for output error files",
-                        default="somalier_interpret")
+    parser.add_argument(
+        "--output-prefix", help="Prefix for output error files", default="somalier_interpret"
+    )
     return parser.parse_args()
 
 
 def check_relationships(
-    ped_entry: str, check_result: str, err_dict: dict[str, list[str]], p_errs: int,
+    ped_entry: str,
+    check_result: str,
+    err_dict: dict[str, list[str]],
+    p_errs: int,
 ) -> tuple[dict[str, list[str]], int]:
     """Comare expected relationship from PED to somalier check result."""
     if ped_entry != check_result:
@@ -77,9 +81,11 @@ def check_ped(ped_file: str, samples_tsv: str, out: str) -> None:
                 parent_errors = 0
 
                 rel_err_dict, parent_errors = check_relationships(
-                    ped_row["paternal_id"], sample_row["paternal_id"], rel_err_dict, parent_errors)
+                    ped_row["paternal_id"], sample_row["paternal_id"], rel_err_dict, parent_errors
+                )
                 rel_err_dict, parent_errors = check_relationships(
-                    ped_row["maternal_id"], sample_row["maternal_id"], rel_err_dict, parent_errors)
+                    ped_row["maternal_id"], sample_row["maternal_id"], rel_err_dict, parent_errors
+                )
             # if both parents have errors, add proband error
             if parent_errors == 2:
                 if sample_id not in rel_err_dict:
@@ -87,8 +93,8 @@ def check_ped(ped_file: str, samples_tsv: str, out: str) -> None:
                 rel_err_dict[sample_id].append("relation")
     # Print out error file if any errors found
     if rel_err_dict:
-        outfile = f"{out}_somalier_relation_errors.tsv"
-        with open(outfile, 'w') as out_f:
+        outfile = f"{out}.somalier_relation_errors.tsv"
+        with open(outfile, "w") as out_f:
             print("sample_id\terror_types", file=out_f)
             for sample, errors in rel_err_dict.items():
                 print(f"{sample}\t{','.join(errors)}", file=out_f)
@@ -140,8 +146,8 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str) -> None:
                 diff_list.append(f"{sample}\t{','.join(group_diff)}")
         # Print out error file if any differences found
         if diff_list:
-            outfile = f"{out}_somalier_sample_swap_errors.tsv"
-            with open(outfile, 'w') as out_f:
+            outfile = f"{out}.somalier_sample_swap_errors.tsv"
+            with open(outfile, "w") as out_f:
                 print("sample_id\tswapped_samples", file=out_f)
                 print("\n".join(diff_list), file=out_f)
             print(f"Sample swaps found. See {outfile} for details.", file=sys.stderr)
@@ -150,13 +156,19 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str) -> None:
 def main() -> None:
     """Parse args and run appropriate checks."""
     args = parse_args()
-    if args.ped and args.samples_tsv:
-        print(f"Checking relationship and sex errors using {args.ped} and {args.samples_tsv}", file=sys.stderr)
-        check_ped(args.ped, args.samples_tsv, args.output_prefix)
-    elif args.groups_csv and args.groups_tsv:
-        # Placeholder for sample swap checking logic
-        print(f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}", file=sys.stderr)
-        check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix)
+    if (args.ped and args.samples_tsv) or (args.groups_csv and args.groups_tsv):
+        if args.ped and args.samples_tsv:
+            print(
+                f"Checking relationship and sex errors using {args.ped} and {args.samples_tsv}",
+                file=sys.stderr,
+            )
+            check_ped(args.ped, args.samples_tsv, args.output_prefix)
+        if args.groups_csv and args.groups_tsv:
+            print(
+                f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}",
+                file=sys.stderr,
+            )
+            check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix)
     else:
         print(
             "Insufficient arguments provided. Please provide either PED and samples TSV "
