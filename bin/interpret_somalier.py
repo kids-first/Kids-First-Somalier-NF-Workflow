@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swap-threshold", help="Relatedness threshold for sample swaps",
                         type=float, default=0.8)
     args = parser.parse_args()
-    if not any([(args.ped and args.samples_tsv), (args.groups-csv, args.groups_tsv)]):
+    if not any([(args.ped and args.samples_tsv), (args.groups_csv, args.groups_tsv)]):
         parser.error("Must provide either --ped and --samples-tsv or --groups-csv and --groups-tsv!")
     return args
 
