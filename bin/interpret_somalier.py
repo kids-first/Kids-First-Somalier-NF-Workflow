@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--swap-threshold", help="Relatedness threshold for sample swaps",
                         type=float, default=0.8)
     args = parser.parse_args()
-    if not any([(args.ped and args.samples-tsv), (args.groups-csv, args.groups-tsv)]):
+    if not any([(args.ped and args.samples_tsv), (args.groups-csv, args.groups_tsv)]):
         parser.error("Must provide either --ped and --samples-tsv or --groups-csv and --groups-tsv!")
     return args
 
@@ -70,30 +70,30 @@ def check_ped(ped_file: str, samples_tsv: str, out: str) -> None:
         samples_reader: csv.DictReader = csv.DictReader(samples_f, delimiter="\t")
         ped_data: dict[str, dict[str, str]] = {row["sample_id"]: row for row in ped_reader}
         samples_data: dict[str, dict[str, str]] = {row["sample_id"]: row for row in samples_reader}
-        ped_sex_dict: dict[str, str] = {"1": "male", "2": "female", "0": "unknown"}
-        # iterate through sample IDs in ped, check sex for each, relationship for proband
-        for sample_id, ped_row in ped_data.items():
-            if sample_id not in samples_data:
-                msg = f"Sample {sample_id} in PED file not found in samples TSV."
-                raise KeyError(msg)
-            sample_row = samples_data[sample_id]
-            # check sex
-            if ped_sex_dict[sample_row["sex"]] != sample_row["original_pedigree_sex"]:
-                if sample_id not in rel_err_dict:
-                    rel_err_dict[sample_id] = []
-                rel_err_dict[sample_id].append("sex")
-            parent_errors = 0
-            for column in ["paternal_id", "maternal_id"]:
-                if ped_row[column] != "0" and ped_row[column] != sample_row[column]:
-                    parent_errors += 1
-                    if ped_row[column] not in rel_err_dict:
-                        rel_err_dict[ped_row[column]] = []
-                    rel_err_dict[ped_row[column]].append("relation")
-            # if both parents have errors, add proband error
-            if parent_errors == 2:
-                if sample_id not in rel_err_dict:
-                    rel_err_dict[sample_id] = []
-                rel_err_dict[sample_id].append("relation")
+    ped_sex_dict: dict[str, str] = {"1": "male", "2": "female", "0": "unknown"}
+    # iterate through sample IDs in ped, check sex for each, relationship for proband
+    for sample_id, ped_row in ped_data.items():
+        if sample_id not in samples_data:
+            msg = f"Sample {sample_id} in PED file not found in samples TSV."
+            raise KeyError(msg)
+        sample_row = samples_data[sample_id]
+        # check sex
+        if ped_sex_dict[sample_row["sex"]] != sample_row["original_pedigree_sex"]:
+            if sample_id not in rel_err_dict:
+                rel_err_dict[sample_id] = []
+            rel_err_dict[sample_id].append("sex")
+        parent_errors = 0
+        for column in ["paternal_id", "maternal_id"]:
+            if ped_row[column] != "0" and ped_row[column] != sample_row[column]:
+                parent_errors += 1
+                if ped_row[column] not in rel_err_dict:
+                    rel_err_dict[ped_row[column]] = []
+                rel_err_dict[ped_row[column]].append("relation")
+        # if both parents have errors, add proband error
+        if parent_errors == 2:
+            if sample_id not in rel_err_dict:
+                rel_err_dict[sample_id] = []
+            rel_err_dict[sample_id].append("relation")
     # Print out error file if any errors found
     if rel_err_dict:
         outfile = f"{out}.somalier_relation_errors.tsv"
