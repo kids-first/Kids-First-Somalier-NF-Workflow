@@ -25,7 +25,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--swap-threshold", help="Relatedness threshold for sample swaps",
                         type=float, default=0.8)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if not any([(args.ped and args.samples-tsv), (args.groups-csv, args.groups-tsv)]):
+        parser.error("Must provide either --ped and --samples-tsv or --groups-csv and --groups-tsv!")
+    return args
 
 
 def check_relationships(
@@ -79,15 +82,13 @@ def check_ped(ped_file: str, samples_tsv: str, out: str) -> None:
                 if sample_id not in rel_err_dict:
                     rel_err_dict[sample_id] = []
                 rel_err_dict[sample_id].append("sex")
-            if ped_row["paternal_id"] != "0" or ped_row["maternal_id"] != "0":
-                parent_errors = 0
-
-                rel_err_dict, parent_errors = check_relationships(
-                    ped_row["paternal_id"], sample_row["paternal_id"], rel_err_dict, parent_errors
-                )
-                rel_err_dict, parent_errors = check_relationships(
-                    ped_row["maternal_id"], sample_row["maternal_id"], rel_err_dict, parent_errors
-                )
+            parent_errors = 0
+            for column in ["paternal_id", "maternal_id"]:
+                if ped_row[column] != "0" and ped_row[column] != sample_row[column]:
+                    parent_errors += 1
+                    if ped_row[column] not in rel_err_dict:
+                        rel_err_dict[ped_row[column]] = []
+                    rel_err_dict[ped_row[column]].append("relation")
             # if both parents have errors, add proband error
             if parent_errors == 2:
                 if sample_id not in rel_err_dict:
@@ -120,7 +121,7 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str, swap_t: float
         swap_t (float): Relatedness threshold to consider samples as related
 
     """
-    with open(groups_csv) as csv_f, open(groups_tsv) as tsv_f:
+    with open(groups_csv) as csv_f:
         # Read input groups CSV
         csv_groups: dict[str, set[str]] = {}
         for line in csv_f:
@@ -128,19 +129,19 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str, swap_t: float
             # Use first sample as group ID
             csv_groups[samples[0]] = set(samples[1:])
         # Read output groups TSV
+    with open(groups_tsv) as tsv_f:
         tsv_groups: dict[str, set[str]] = {}
         for line in tsv_f:
             sample_csv, relatedness = line.strip().split("\t")
             sample_a, sample_b = sample_csv.split(",")
-            if float(relatedness) >= swap_t:
-                if sample_a in csv_groups:
-                    index_sample = sample_a
-                    comparator_sample = sample_b
-                elif sample_b in csv_groups:
-                    index_sample = sample_b
-                    comparator_sample = sample_a
-                else:
-                    continue
+            if float(relatedness) < swap_t:
+                continue
+            if sample_a in csv_groups:
+                index_sample = sample_a
+                comparator_sample = sample_b
+            elif sample_b in csv_groups:
+                index_sample = sample_b
+                comparator_sample = sample_a
             else:
                 continue
             if index_sample not in tsv_groups:
@@ -163,26 +164,18 @@ def check_sample_swaps(groups_csv: str, groups_tsv: str, out: str, swap_t: float
 def main() -> None:
     """Parse args and run appropriate checks."""
     args = parse_args()
-    if (args.ped and args.samples_tsv) or (args.groups_csv and args.groups_tsv):
-        if args.ped and args.samples_tsv:
-            print(
-                f"Checking relationship and sex errors using {args.ped} and {args.samples_tsv}",
-                file=sys.stderr,
-            )
-            check_ped(args.ped, args.samples_tsv, args.output_prefix)
-        if args.groups_csv and args.groups_tsv:
-            print(
-                f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}",
-                file=sys.stderr,
-            )
-            check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix,
-                               args.swap_threshold)
-    else:
+    if args.ped and args.samples_tsv:
         print(
-            "Insufficient arguments provided. Please provide either PED and samples TSV "
-            "for relationship checks or groups CSV and groups TSV for sample swap checks.",
+            f"Checking relationship and sex errors using {args.ped} and {args.samples_tsv}",
             file=sys.stderr,
         )
+        check_ped(args.ped, args.samples_tsv, args.output_prefix)
+    if args.groups_csv and args.groups_tsv:
+        print(
+            f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}",
+            file=sys.stderr,
+        )
+        check_sample_swaps(args.groups_csv, args.groups_tsv, args.output_prefix, args.swap_threshold)
 
 
 if __name__ == "__main__":
