@@ -12,7 +12,6 @@ def validate_inputs(param_obj){
     def non_empty_param_keys = param_obj.findAll { _key, value -> 
     value != null && value != ""
     }.keySet()
-    println(non_empty_param_keys)
     if (param_obj.alignment_file){
         def required_options = [ 'alignment_index', 'fasta', 'fai', 'sites' ]
         def missing = required_options.findAll { param ->  !non_empty_param_keys.contains(param) }
@@ -52,11 +51,13 @@ workflow {
             groups_csv,
             ped
         )
+        // collect all outputs from RELATE.out without naming them explicitly
+        println(RELATE.out.getProperties()['names'])
     }
     RESULT_INTERPRET(
         ped,
         RELATE.out.samples_tsv,
         groups_csv,
         RELATE.out.groups_tsv
-    ) | TAR_GZ
+    )
 }
