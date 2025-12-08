@@ -3,6 +3,7 @@
 include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
 include { RESULT_INTERPRET } from './modules/local/python/somalier_result_interpretation.nf'
+include { TAR_GZ } from './modules/local/ubuntu/tar.nf'
 
 def validate_inputs(param_obj){
     if (params.extract_only){
@@ -57,5 +58,5 @@ workflow {
         RELATE.out.samples_tsv,
         groups_csv,
         RELATE.out.groups_tsv
-    )
+    ) | TAR_GZ
 }
