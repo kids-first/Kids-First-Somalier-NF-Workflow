@@ -2,6 +2,8 @@
 
 include { EXTRACT } from './modules/local/somalier/extract.nf'
 include { RELATE } from './modules/local/somalier/relate.nf'
+include { RESULT_INTERPRET } from './modules/local/python/somalier_result_interpretation.nf'
+include { TAR_GZ } from './modules/local/ubuntu/tar.nf'
 
 def validate_inputs(param_obj){
     if (params.extract_only){
@@ -10,7 +12,6 @@ def validate_inputs(param_obj){
     def non_empty_param_keys = param_obj.findAll { _key, value -> 
     value != null && value != ""
     }.keySet()
-    println(non_empty_param_keys)
     if (param_obj.alignment_file){
         def required_options = [ 'alignment_index', 'fasta', 'fai', 'sites' ]
         def missing = required_options.findAll { param ->  !non_empty_param_keys.contains(param) }
@@ -50,5 +51,12 @@ workflow {
             groups_csv,
             ped
         )
+        TAR_GZ(RELATE.out.all_outputs)
     }
+    RESULT_INTERPRET(
+        ped,
+        RELATE.out.samples_tsv,
+        groups_csv,
+        RELATE.out.groups_tsv
+    )
 }

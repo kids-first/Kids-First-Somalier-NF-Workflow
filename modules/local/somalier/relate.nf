@@ -9,9 +9,8 @@ process RELATE {
 
     output:
     path('*groups.tsv'), emit: groups_tsv
-    path('*html'), emit: interactive_html
-    path('*pairs.tsv'), emit: pairs_tsv
     path('*samples.tsv'), emit: samples_tsv
+    path('*'), emit: all_outputs
 
     script:
     def somalier_ext_args = task.ext.args ?: ''

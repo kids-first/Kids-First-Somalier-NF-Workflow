@@ -54,6 +54,8 @@ Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some
 #### `relate` Recommended
 - `groups_csv`: somalier relate optional path to expected groups of samples (e.g. tumor normal pairs). A group file is specified as comma-separated groups per line
 - `output_prefix`: Set file name prefix. Default is `somalier.`
+#### `result interpret`
+- `swap_threshold`: Relatedness threshold to consider samples as related in sample swap check. Default `0.8`
 
 ## Outputs
 ### `extract`
@@ -63,3 +65,8 @@ Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some
 - `.samples.tsv`: .ped like file with extra QC columns
 - `.pairs.tsv`: shows IBS (identity by state) for all possible sample pairs
 - `.groups.tsv`: shows pairs of samples above a certain relatedness
+### `result interpret`
+Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on group input).
+For each situation, if no issues are found, no file is generated.
+- `.somalier_relation_errors.tsv`: has any issues by sample in relationship or sex found
+- `.somalier_sample_swap_errors.tsv`: Compared to input groups, outputs which samples failed to match
