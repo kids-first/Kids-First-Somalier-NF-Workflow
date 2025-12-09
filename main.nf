@@ -51,8 +51,7 @@ workflow {
             groups_csv,
             ped
         )
-        // collect all outputs from RELATE.out without naming them explicitly
-        println(RELATE.out.getProperties()['names'])
+        TAR_GZ(RELATE.out.all_outputs)
     }
     RESULT_INTERPRET(
         ped,
