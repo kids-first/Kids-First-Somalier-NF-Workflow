@@ -67,6 +67,15 @@ Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some
 - `.groups.tsv`: shows pairs of samples above a certain relatedness
 ### `result interpret`
 Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on group input).
-For each situation, if no issues are found, no file is generated.
-- `.somalier_relation_errors.tsv`: has any issues by sample in relationship or sex found
-- `.somalier_sample_swap_errors.tsv`: Compared to input groups, outputs which samples failed to match
+Output is a VCF-style TSV with a header that explains error types. For example:
+```
+##FILTER=<ID=RELATION,Description="Sample has relationship errors">
+##FILTER=<ID=SEX,Description="Incorrect SEX assignment">
+##FILTER=<ID=SWAP,Description="Sample swap detected">
+##FILTER=<ID=PASS,Description="No errors detected">
+#SAMPLE FILTER   INFO
+BS_KZT7FAEW	RELATIONSHIP	RELATIONSHIP=Incorrect maternal_id
+BS_XG2AF312	PASS	
+BS_F3QBHFGD	SEX	SEX=Labeled female, predicted male
+BS_W4ZEEWZA	SWAP	SWAP=Failed relatedness threshold 0.8: BS_7P4VH4AR,BS_F3QBHFGD
+```
