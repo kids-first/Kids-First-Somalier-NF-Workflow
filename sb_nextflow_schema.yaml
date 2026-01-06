@@ -324,7 +324,7 @@ outputs:
     id: result_interpret
     outputBinding:
         glob: 'results/result_interpret/*'
-    type:
-    - 'null'
-    -   items: File
-        type: array
+    type: File
+-   doc: Interpretation flag
+    id: interpret_status
+    type: stdout

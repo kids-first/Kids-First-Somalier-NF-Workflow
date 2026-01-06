@@ -139,7 +139,7 @@ def check_sample_swaps(
                 if sample not in errs_dict:
                     errs_dict[sample] = {}
                 errs_dict[sample]["SWAP"] = (
-                    f"Expected related samples not found: {','.join(group_diff)}"
+                    f"Failed relatedness threshold {swap_t}: {','.join(group_diff)}"
                 )
         return errs_dict
 
@@ -152,8 +152,7 @@ def main() -> None:
 ##FILTER=<ID=SEX,Description="Incorrect SEX assignment">
 ##FILTER=<ID=SWAP,Description="Sample swap detected">
 ##FILTER=<ID=PASS,Description="No errors detected">
-#SAMPLE\tFILTER\tINFO
-"""
+#SAMPLE\tFILTER\tINFO"""
     errs_dict: dict[str, dict[str, str]] = {}
     if args.ped and args.samples_tsv:
         print(
@@ -169,15 +168,19 @@ def main() -> None:
         errs_dict = check_sample_swaps(
             args.groups_csv, args.groups_tsv, errs_dict, args.swap_threshold
         )
+    err_flag = "PASS"
     with open(args.output_prefix + ".somalier_interpretation.tsv", "w") as out_f:
         print(err_filter, file=out_f)
         for sample_id, error_info in errs_dict.items():
             if not error_info:
                 print(f"{sample_id}\tPASS\t", file=out_f)
             else:
+                err_flag = "ERROR"
                 filter_list = ";".join(error_info.keys())
                 info_list = ";".join([f"{key}={value}" for key, value in error_info.items()])
                 print(f"{sample_id}\t{filter_list}\t{info_list}", file=out_f)
+    # For workflow purposes, print overall status
+    print(err_flag)
 
 
 if __name__ == "__main__":
