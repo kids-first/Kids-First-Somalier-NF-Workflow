@@ -334,6 +334,10 @@ outputs:
     outputBinding:
         glob: 'results/result_interpret/*'
     type: File
-# -   doc: Interpretation flag
-#     id: interpret_status
-#     type: stdout
+-   doc: Interpretation flag
+    id: interpret_status
+    type: 'string'
+    outputBinding:
+        glob: 'results/pipeline_verdict/somalier_verdict.txt'
+        loadContents: true
+        outputEval: '$(self[0].contents)'

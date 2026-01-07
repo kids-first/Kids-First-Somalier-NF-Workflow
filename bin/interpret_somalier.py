@@ -175,7 +175,7 @@ def main() -> None:
             if not error_info:
                 print(f"{sample_id}\tPASS\t", file=out_f)
             else:
-                err_flag = "ERROR"
+                err_flag = "FAIL"
                 filter_list = ";".join(error_info.keys())
                 info_list = ";".join([f"{key}={value}" for key, value in error_info.items()])
                 print(f"{sample_id}\t{filter_list}\t{info_list}", file=out_f)

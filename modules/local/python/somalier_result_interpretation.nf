@@ -9,7 +9,8 @@ process RESULT_INTERPRET {
     path(groups_tsv)
 
     output:
-    path('*somalier_interpretation.tsv'), emit: somalier_interpretation_tsv
+    path('*.somalier_interpretation.tsv'), emit: somalier_interpretation_tsv
+    path('somalier_verdict.txt'), emit: pipleine_verdict
     stdout emit: interpret_status
 
     script:
@@ -20,6 +21,7 @@ process RESULT_INTERPRET {
     interpret_somalier.py \\
     $relate_params \\
     $swap_params \\
-    $interpret_ext_args
+    $interpret_ext_args \\
+    | tee somalier_verdict.txt
     """
 }
