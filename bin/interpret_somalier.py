@@ -135,9 +135,9 @@ def check_sample_swaps(
             tsv_groups[index_sample].add(comparator_sample)
         for sample, sample_set in csv_groups.items():
             group_diff = sample_set - tsv_groups.get(sample, set())
-            if group_diff:
-                if sample not in errs_dict:
+            if sample not in errs_dict:
                     errs_dict[sample] = {}
+            if group_diff:
                 errs_dict[sample]["SWAP"] = (
                     f"Failed relatedness threshold {swap_t}: {','.join(group_diff)}"
                 )
