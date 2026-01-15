@@ -252,15 +252,6 @@ inputs:
     type:
     - 'null'
     - boolean
--   id: outdir
-    inputBinding:
-        prefix: --outdir
-    label: Path to the output directory where the results will be saved.
-    sbg:category: Input/output options
-    sbg:hidden: true
-    sbg:icon: fas fa-folder-open
-    default: ./results
-    type: 'string?'
 -   doc: This parameter is *mandatory* if alignment_file input given for somalier
         extract
     format: text/plain
