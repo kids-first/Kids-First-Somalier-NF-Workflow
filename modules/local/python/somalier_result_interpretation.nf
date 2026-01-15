@@ -9,7 +9,8 @@ process RESULT_INTERPRET {
     path(groups_tsv)
 
     output:
-    path('*tsv'), optional: true
+    path('*.somalier_interpretation.tsv'), emit: somalier_interpretation_tsv
+    stdout emit: interpret_status
 
     script:
     def relate_params = ped ? "--ped $ped --samples-tsv $samples_tsv" : ''

@@ -2,7 +2,8 @@ app_content:
     entrypoint: main.nf
 class: nextflow
 cwlVersion: None
-executor_version: 23.04.1
+executor_version: 25.10.2
+label: KFDRC DRC Somalier Swap Relatedness QC
 requirements:
 -   class: InlineJavascriptRequirement
 -   class: ShellCommandRequirement
@@ -79,9 +80,18 @@ doc: |
     - `.groups.tsv`: shows pairs of samples above a certain relatedness
     ### `result interpret`
     Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on group input).
-    For each situation, if no issues are found, no file is generated.
-    - `.somalier_relation_errors.tsv`: has any issues by sample in relationship or sex found
-    - `.somalier_sample_swap_errors.tsv`: Compared to input groups, outputs which samples failed to match
+    Output is a VCF-style TSV with a header that explains error types. For example:
+    ```
+    ##FILTER=<ID=RELATION,Description="Sample has relationship errors">
+    ##FILTER=<ID=SEX,Description="Incorrect SEX assignment">
+    ##FILTER=<ID=SWAP,Description="Sample swap detected">
+    ##FILTER=<ID=PASS,Description="No errors detected">
+    #SAMPLE FILTER   INFO
+    BS_KZT7FAEW	RELATIONSHIP	RELATIONSHIP=Incorrect maternal_id
+    BS_XG2AF312	PASS	
+    BS_F3QBHFGD	SEX	SEX=Labeled female, predicted male
+    BS_W4ZEEWZA	SWAP	SWAP=Failed relatedness threshold 0.8: BS_7P4VH4AR,BS_F3QBHFGD
+    ```
 
 hints:
 -   class: sbg:NextflowExecutionMode
@@ -139,6 +149,7 @@ inputs:
     type:
     - 'null'
     - File
+    sbg:suggestedValue: { class: File, path: 69690cc5e0dee132ae57604a, name: sites.hg38.vcf.gz }
 -   id: extract_sample_id
     doc: somalier extract, list of sample IDs to assign if different from input
         alignment. If changing one, must provide all
@@ -241,15 +252,6 @@ inputs:
     type:
     - 'null'
     - boolean
--   id: outdir
-    inputBinding:
-        prefix: --outdir
-    label: Path to the output directory where the results will be saved.
-    sbg:category: Input/output options
-    sbg:hidden: true
-    sbg:icon: fas fa-folder-open
-    default: ./results
-    type: 'string?'
 -   doc: This parameter is *mandatory* if alignment_file input given for somalier
         extract
     format: text/plain
@@ -262,47 +264,6 @@ inputs:
     type:
     - 'null'
     - File
--   doc: Use to set an upper-limit for the CPU requirement for each process. Should
-        be an integer e.g. `--max_cpus 1`
-    id: max_cpus
-    inputBinding:
-        prefix: --max_cpus
-    label: Maximum number of CPUs that can be requested for any single job.
-    sbg:category: Max job request options
-    sbg:hidden: true
-    sbg:icon: fas fa-microchip
-    default: 16
-    type:
-    - 'null'
-    - int
--   doc: Use to set an upper-limit for the memory requirement for each process. Should
-        be a string in the format integer-unit e.g. `--max_memory '8.GB'`
-    id: max_memory
-    inputBinding:
-        prefix: --max_memory
-    label: Maximum amount of memory that can be requested for any single job.
-    sbg:category: Max job request options
-    sbg:hidden: true
-    sbg:icon: fas fa-memory
-    sbg:pattern: ^\d+(\.\d+)?\.?\s*(K|M|G|T)?B$
-    default: 128.GB
-    type:
-    - 'null'
-    - string
--   doc: Use to set an upper-limit for the time requirement for each process. Should
-        be a string in the format integer-unit e.g. `--max_time '2.h'`
-    id: max_time
-    inputBinding:
-        prefix: --max_time
-    label: Maximum amount of time that can be requested for any single job.
-    sbg:category: Max job request options
-    sbg:hidden: true
-    sbg:icon: far fa-clock
-    sbg:pattern: ^(\d+\.?\s*(s|m|h|day)\s*)+$
-    default: 240.h
-    type:
-    - 'null'
-    - string
 
 outputs:
 -   doc: Output from somalier relate
@@ -324,7 +285,13 @@ outputs:
     id: result_interpret
     outputBinding:
         glob: 'results/result_interpret/*'
-    type:
-    - 'null'
-    -   items: File
-        type: array
+    type: File
+
+$namespaces:
+  sbg: https://sevenbridges.com
+
+"sbg:license": Apache License 2.0
+"sbg:publisher": KFDRC
+"sbg:links":
+- id: 'https://github.com/kids-first/Kids-First-Somalier-NF-Workflow/releases/tag/v1.0.0'
+  label: github-release
