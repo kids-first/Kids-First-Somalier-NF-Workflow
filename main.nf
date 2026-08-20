@@ -52,11 +52,11 @@ workflow {
             ped
         )
         TAR_GZ(RELATE.out.all_outputs)
+        RESULT_INTERPRET(
+            ped,
+            RELATE.out.samples_tsv,
+            groups_csv,
+            RELATE.out.pairs_tsv
+        )
     }
-    RESULT_INTERPRET(
-        ped,
-        RELATE.out.samples_tsv,
-        groups_csv,
-        RELATE.out.groups_tsv
-    )
 }

@@ -1,6 +1,6 @@
 process EXTRACT {
     label 'C2'
-    container "brentp/somalier:v0.3.1"
+    container "brentp/somalier:v0.3.3"
 
     input:
     tuple path(alignment_file), path(_alignment_index)

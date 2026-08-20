@@ -1,6 +1,6 @@
 process RELATE {
     label 'C2'
-    container "brentp/somalier:v0.3.1"
+    container "brentp/somalier:v0.3.3"
 
     input:
     path(somalier_file)
@@ -8,7 +8,7 @@ process RELATE {
     path(ped)
 
     output:
-    path('*groups.tsv'), emit: groups_tsv
+    path('*pairs.tsv'), emit: pairs_tsv
     path('*samples.tsv'), emit: samples_tsv
     path('*'), emit: all_outputs
 

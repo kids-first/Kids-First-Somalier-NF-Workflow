@@ -19,15 +19,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ped", help="Input PED file for relationships")
     parser.add_argument("--samples-tsv", help="Output samples TSV file from somalier")
     parser.add_argument("--groups-csv", help="Input groups CSV file for sample swaps")
-    parser.add_argument("--groups-tsv", help="Output groups TSV file from somalier")
+    parser.add_argument("--pairs-tsv", help="Output groups TSV file from somalier")
     parser.add_argument(
         "--output-prefix", help="Prefix for output error files", default="somalier_interpret"
     )
     parser.add_argument("--swap-threshold", help="Relatedness threshold for sample swaps",
                         type=float, default=0.8)
     args = parser.parse_args()
-    if not any([(args.ped and args.samples_tsv), (args.groups_csv, args.groups_tsv)]):
-        parser.error("Must provide either --ped and --samples-tsv or --groups-csv and --groups-tsv!")
+    if not any([(args.ped and args.samples_tsv), (args.groups_csv, args.pairs_tsv)]):
+        parser.error("Must provide either --ped and --samples-tsv or --groups-csv and --pairs-tsv!")
     return args
 
 
@@ -87,21 +87,21 @@ def check_ped(
 
 
 def check_sample_swaps(
-    groups_csv: str, groups_tsv: str, errs_dict: dict[str, dict[str, str]], swap_t: float = 0.8,
+    groups_csv: str, pairs_tsv: str, errs_dict: dict[str, dict[str, str]], swap_t: float = 0.8,
 ) -> dict[str, dict[str, str]]:
-    """Check for sample swaps using groups CSV and groups TSV files.
+    """Check for sample swaps using groups CSV and pairs TSV files.
 
     group csv simply has all sample from same patient together as a csv per line.
-    group tsv has pairwise relatedness info.
-    Therefore we need to group all above a certain relatedness threshold to get the complete set and check against csv.
+    pairs tsv has pairwise concordance info.
+    Therefore we need to group all above a certain concordance threshold to get the complete set and check against csv.
     Easiest way to check would be to create one pairwise comparison set based on input, and just compare results
     to see if all samples at or above threshold in the tsv group are in the input csv group.
 
     Args:
         groups_csv (str): Path to groups CSV file
-        groups_tsv (str): Path to groups TSV file
+        pairs_tsv (str): Path to pairs TSV file
         errs_dict (dict): Dictionary to store swap errors
-        swap_t (float): Relatedness threshold to consider samples as related
+        swap_t (float): Concordance threshold to consider samples as related
 
     Returns:
         dict: Updated errs_dict with any found errors
@@ -115,12 +115,15 @@ def check_sample_swaps(
             # Use first sample as group ID
             csv_groups[samples[0]] = set(samples[1:])
     # Read output groups TSV
-    with open(groups_tsv) as tsv_f:
+    with open(pairs_tsv) as tsv_f:
         tsv_groups: dict[str, set[str]] = {}
+        head = next(tsv_f)
+        header = head.strip().split("\t")
+        concordance_index = header.index("concordance")
         for line in tsv_f:
-            sample_csv, relatedness = line.strip().split("\t")
-            sample_a, sample_b = sample_csv.split(",")
-            if float(relatedness) < swap_t:
+            data = line.strip().split("\t")
+            sample_a, sample_b, concordance = (data[0], data[1], data[concordance_index])
+            if float(concordance) < swap_t:
                 continue
             if sample_a in csv_groups:
                 index_sample = sample_a
@@ -159,15 +162,15 @@ def main() -> None:
             f"Checking relationship and sex errors using {args.ped} and {args.samples_tsv}",
             file=sys.stderr,
         )
-        errs_dict = check_ped(args.ped, args.samples_tsv, errs_dict)
-    if args.groups_csv and args.groups_tsv:
+        errs_dict.update(check_ped(args.ped, args.samples_tsv, errs_dict))
+    if args.groups_csv and args.pairs_tsv:
         print(
-            f"Checking sample swaps using {args.groups_csv} and {args.groups_tsv}",
+            f"Checking sample swaps using {args.groups_csv} and {args.pairs_tsv}",
             file=sys.stderr,
         )
-        errs_dict = check_sample_swaps(
-            args.groups_csv, args.groups_tsv, errs_dict, args.swap_threshold
-        )
+        errs_dict.update(check_sample_swaps(
+            args.groups_csv, args.pairs_tsv, errs_dict, args.swap_threshold
+        ))
     err_flag = "PASS"
     with open(args.output_prefix + ".somalier_interpretation.tsv", "w") as out_f:
         print(err_filter, file=out_f)
