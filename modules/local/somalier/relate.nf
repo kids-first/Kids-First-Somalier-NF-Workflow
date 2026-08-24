@@ -1,6 +1,6 @@
 process RELATE {
     label 'C2'
-    container "brentp/somalier:v0.3.3"
+    container "pgc-images.sbgenomics.com/d3b-bixu/somalier:v0.3.3"
 
     input:
     path(somalier_file)

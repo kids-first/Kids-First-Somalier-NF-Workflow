@@ -114,7 +114,7 @@ def check_sample_swaps(
             samples = line.strip().split(",")
             # Use first sample as group ID
             csv_groups[samples[0]] = set(samples[1:])
-    # Read output groups TSV
+    # Read output pairs TSV
     with open(pairs_tsv) as tsv_f:
         tsv_groups: dict[str, set[str]] = {}
         head = next(tsv_f)
@@ -142,7 +142,7 @@ def check_sample_swaps(
                     errs_dict[sample] = {}
             if group_diff:
                 errs_dict[sample]["SWAP"] = (
-                    f"Failed relatedness threshold {swap_t}: {','.join(group_diff)}"
+                    f"Failed concordance threshold {swap_t}: {','.join(group_diff)}"
                 )
         return errs_dict
 

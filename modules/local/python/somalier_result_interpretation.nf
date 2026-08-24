@@ -14,7 +14,7 @@ process RESULT_INTERPRET {
 
     script:
     def relate_params = ped ? "--ped $ped --samples-tsv $samples_tsv" : ''
-    def swap_params = groups_csv ? "--groups-csv $groups_csv --groups-tsv $groups_tsv" : ''
+    def swap_params = groups_csv ? "--groups-csv $groups_csv --pairs-tsv $groups_tsv" : ''
     def interpret_ext_args = task.ext.args ?: ''
     """
     interpret_somalier.py \\
