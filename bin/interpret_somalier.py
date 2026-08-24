@@ -9,6 +9,7 @@ For samples swaps, need input groups csv file and output .groups.tsv.
 import argparse
 import csv
 import sys
+from typing import IO
 
 
 def parse_args() -> argparse.Namespace:
@@ -87,8 +88,11 @@ def check_ped(
 
 
 def check_sample_swaps(
-    groups_csv: str, pairs_tsv: str, errs_dict: dict[str, dict[str, str]], swap_t: float = 0.8,
-) -> dict[str, dict[str, str]]:
+    groups_csv: str,
+    pairs_tsv: str,
+    swap_f: IO,
+    swap_t: float = 0.8
+) -> None:
     """Check for sample swaps using groups CSV and pairs TSV files.
 
     group csv simply has all sample from same patient together as a csv per line.
@@ -100,11 +104,11 @@ def check_sample_swaps(
     Args:
         groups_csv (str): Path to groups CSV file
         pairs_tsv (str): Path to pairs TSV file
-        errs_dict (dict): Dictionary to store swap errors
         swap_t (float): Concordance threshold to consider samples as related
+        swap_f (IO): File handle to write swap summary output
 
     Returns:
-        dict: Updated errs_dict with any found errors
+        None
 
     """
     with open(groups_csv) as csv_f:
@@ -116,35 +120,18 @@ def check_sample_swaps(
             csv_groups[samples[0]] = set(samples[1:])
     # Read output pairs TSV
     with open(pairs_tsv) as tsv_f:
-        tsv_groups: dict[str, set[str]] = {}
         head = next(tsv_f)
         header = head.strip().split("\t")
         concordance_index = header.index("concordance")
         for line in tsv_f:
             data = line.strip().split("\t")
             sample_a, sample_b, concordance = (data[0], data[1], data[concordance_index])
-            if float(concordance) < swap_t:
-                continue
-            if sample_a in csv_groups:
-                index_sample = sample_a
-                comparator_sample = sample_b
-            elif sample_b in csv_groups:
-                index_sample = sample_b
-                comparator_sample = sample_a
-            else:
-                continue
-            if index_sample not in tsv_groups:
-                tsv_groups[index_sample] = set()
-            tsv_groups[index_sample].add(comparator_sample)
-        for sample, sample_set in csv_groups.items():
-            group_diff = sample_set - tsv_groups.get(sample, set())
-            if sample not in errs_dict:
-                    errs_dict[sample] = {}
-            if group_diff:
-                errs_dict[sample]["SWAP"] = (
-                    f"Failed concordance threshold {swap_t}: {','.join(group_diff)}"
-                )
-        return errs_dict
+            if ((sample_a in csv_groups and sample_b in csv_groups[sample_a])
+                or (sample_b in csv_groups and sample_a in csv_groups[sample_b])):
+                verdict: str = "PASS"
+                if float(concordance) < swap_t:
+                    verdict = "FAIL"
+                print(f"{sample_a}\t{sample_b}\t{concordance}\t{verdict}", file=swap_f)
 
 
 def main() -> None:
@@ -168,11 +155,17 @@ def main() -> None:
             f"Checking sample swaps using {args.groups_csv} and {args.pairs_tsv}",
             file=sys.stderr,
         )
-        errs_dict.update(check_sample_swaps(
-            args.groups_csv, args.pairs_tsv, errs_dict, args.swap_threshold
-        ))
+        swaps_summary = args.output_prefix + ".somalier_swaps_summary.tsv"
+        with open(swaps_summary, "w") as swap_f:
+            print(f"sample_1\tsample_2\tconcordance_score\tpasses_{args.swap_threshold}",
+                  file=swap_f)
+            check_sample_swaps(
+                args.groups_csv, args.pairs_tsv, swap_f, args.swap_threshold
+            )
+
     err_flag = "PASS"
-    with open(args.output_prefix + ".somalier_interpretation.tsv", "w") as out_f:
+    combined_out = args.output_prefix + ".somalier_interpretation.tsv"
+    with open(combined_out, "w") as out_f:
         print(err_filter, file=out_f)
         for sample_id, error_info in errs_dict.items():
             if not error_info:
