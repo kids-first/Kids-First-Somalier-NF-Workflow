@@ -9,7 +9,7 @@ process RESULT_INTERPRET {
     path(groups_tsv)
 
     output:
-    path('*.somalier_interpretation.tsv'), emit: somalier_interpretation_tsv
+    path('*_summary.tsv'), emit: somalier_interpretation_tsv
     stdout emit: interpret_status
 
     script:

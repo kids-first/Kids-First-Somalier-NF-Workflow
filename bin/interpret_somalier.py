@@ -11,8 +11,6 @@ import csv
 import sys
 from typing import IO
 
-from numpy import int32
-
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
@@ -92,7 +90,7 @@ def check_ped(
             errs_dict[sample_id]["RELATIONSHIP"] = "Incorrect paternal and maternal IDs"
 
         print("\t".join(ped_row.values()), file=fam_out, end="\t")
-        if sample_id in errs_dict:
+        if errs_dict.get(sample_id):
             print("; ".join([f"{k}: {v}" for k, v in errs_dict[sample_id].items()]), file=fam_out)
         else:
             print("PASS", file=fam_out)
@@ -171,7 +169,7 @@ def main() -> None:
         with open(swaps_summary, "w") as swap_f:
             print(f"sample_1\tsample_2\tconcordance_score\tpasses_{args.swap_threshold}",
                   file=swap_f)
-            check_sample_swaps(
+            err_flag += check_sample_swaps(
                 args.groups_csv, args.pairs_tsv, swap_f, args.swap_threshold
             )
 
