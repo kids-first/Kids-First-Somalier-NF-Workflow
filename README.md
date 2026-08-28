@@ -1,10 +1,10 @@
 # Kids First DRC Somalier QC
-Somalier ([git repo](https://github.com/brentp/somalier/tree/v0.3.1), [publication](https://pmc.ncbi.nlm.nih.gov/articles/PMC7362544/)) is a sample-swap and relatedness checker.
+Somalier ([git repo](https://github.com/brentp/somalier/tree/v0.3.3), [publication](https://pmc.ncbi.nlm.nih.gov/articles/PMC7362544/)) is a sample-swap and relatedness checker.
 Here, we have constructed a nextflow workflow to fit our needs for trio-based relatedness QC as well as patient-level QC from cancer-related sequencing.
 
 
 <p align="center">
-  <img src="docs/logo/kids_first_logo.svg" alt="Kids First repository logo" width="660px" />
+  <img src="https://raw.githubusercontent.com/kids-first/Kids-First-Somalier-NF-Workflow/refs/heads/master/docs/logo/kids_first_logo.svg" alt="Kids First repository logo" width="660px" />
 </p>
 <p align="center">
   <a href="https://github.com/kids-first/Kids-First-Somalier-NF-Workflow/blob/main/LICENSE"><img src="https://img.shields.io/github/license/kids-first/Kids-First-Somalier-NF-Workflow.svg?style=for-the-badge"></a>
@@ -30,7 +30,6 @@ Most commonly used for trios, can be expanded to include siblings.
 #### `relate` Optional
 - `min_depth`: only genotype sites with at least this depth. Default 7
 - `min_ab`: hets sites must be between min-ab and 1 - min_ab. set this to 0.2 for RNA-Seq data (default: 0.3)
-- `unknown`: set unknown genotypes to hom-ref
 ### None or some have extracted site files
 For those missing `.somalier` files, if all have the same reference genome
 #### `extract` Required
@@ -66,16 +65,35 @@ Most commonly in the tumor-normal realm for DNA and RNA samples. If none or some
 - `.pairs.tsv`: shows IBS (identity by state) for all possible sample pairs
 - `.groups.tsv`: shows pairs of samples above a certain relatedness
 ### `result interpret`
-Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on group input).
-Output is a VCF-style TSV with a header that explains error types. For example:
+Custom script is run to summarize if errors were found in relationship and/or sex (based on ped input) or if samples swaps found (based on pairs input).
+Will output a flag to STDOUT of either `PASS` if all checks passed, or `FAIL, {n} errors` with total number errors found in all checks
+#### Swap example, *.swaps_summary.tsv file
 ```
-##FILTER=<ID=RELATION,Description="Sample has relationship errors">
-##FILTER=<ID=SEX,Description="Incorrect SEX assignment">
-##FILTER=<ID=SWAP,Description="Sample swap detected">
-##FILTER=<ID=PASS,Description="No errors detected">
-#SAMPLE FILTER   INFO
-BS_KZT7FAEW	RELATIONSHIP	RELATIONSHIP=Incorrect maternal_id
-BS_XG2AF312	PASS	
-BS_F3QBHFGD	SEX	SEX=Labeled female, predicted male
-BS_W4ZEEWZA	SWAP	SWAP=Failed relatedness threshold 0.8: BS_7P4VH4AR,BS_F3QBHFGD
+sample_1        sample_2        concordance_score       passes_0.6
+BS_FC3BZY2G     BS_F6ZHHA54     1.000   PASS
+BS_9YPJANGX     BS_AF6A572P     1.000   PASS
+BS_9YPJANGX     BS_HB03GSHF     0.500   FAIL
+BS_B5V3KSQY     BS_RZN71A5Z     1.000   PASS
+BS_B5V3KSQY     BS_ZMZTCQRM     0.998   PASS
+BS_PYYNXW86     BS_3RYXSDKF     1.000   PASS
 ```
+
+#### Family example *.family_summary.tsv
+```
+#family_id      sample_id       paternal_id     maternal_id     sex     phenotype       check_status
+FM_N6BZW43Q     BS_KZT7FAEW     BS_XG2AF312     BS_F3QBHFGD     1       2       SEX: Labeled male, predicted female; RELATIONSHIP: Incorrect maternal_id
+FM_N6BZW43Q     BS_XG2AF312     0       0       1       1       PASS
+FM_N6BZW43Q     BS_F3QBHFGD     0       0       2       1       SEX: Labeled female, predicted male
+```
+
+## Result interpretation guidelines
+If the result interpretation script outputs to STDOUT `PASS`, nothing to do, congrats! If it says `FAIL`, untar the `relate` tar ball and do the following:
+
+- Review the `*_summary.tsv` file(s). This will tell you which samples have problems.
+- If `FAIL` is seen in the swaps summary
+  - Check the pairs.tsv file frm the tar ball to see if another sample ended up having a passing concordance score
+  - If there is no better match, and you have more candidates, add those to the workflow, re-run, and check the pairs file again
+- If `FAIL` is in the family summary
+  - Update/correct the sex in the ped file based on the results is `SEX` was the error
+  - If relationship is the issue, check the pairs tsv file and review the `relatedness` score.
+  - Similar to swaps, you can add more samples that are candidates, and re-run and review pairs to see if another sample has an expected `relatedness` score
