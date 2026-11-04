@@ -107,9 +107,7 @@ def check_sample_swaps(
 
     group csv simply has all sample from same patient together as a csv per line.
     pairs tsv has pairwise concordance info.
-    Therefore we need to group all above a certain concordance threshold to get the complete set and check against csv.
-    Easiest way to check would be to create one pairwise comparison set based on input, and just compare results
-    to see if all samples at or above threshold in the tsv group are in the input csv group.
+    We save each sample grouping as a set, and search for each pair in the list of sets, and check if concordance is above threshold.
 
     Args:
         groups_csv (str): Path to groups CSV file
@@ -123,11 +121,10 @@ def check_sample_swaps(
     """
     status: int = 0
     with open(groups_csv) as csv_f:
-        # Read input groups CSV
+        # Save sample groupings as list of sets to search
         csv_groups: list[set[str]] = []
         for line in csv_f:
             samples = line.strip().split(",")
-            # Use first sample as group ID
             csv_groups.append(set(samples))
     # Read output pairs TSV
     with open(pairs_tsv) as tsv_f:
@@ -138,6 +135,7 @@ def check_sample_swaps(
             data = line.strip().split("\t")
             sample_a, sample_b, concordance = (data[0], data[1], data[concordance_index])
             for sample_set in csv_groups:
+                # just checking if both samples are in the same group, if so check concordance
                 if sample_a in sample_set and sample_b in sample_set:
                     verdict: str = "PASS"
                     if float(concordance) < swap_t:
