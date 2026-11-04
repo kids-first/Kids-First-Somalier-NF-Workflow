@@ -124,11 +124,11 @@ def check_sample_swaps(
     status: int = 0
     with open(groups_csv) as csv_f:
         # Read input groups CSV
-        csv_groups: dict[str, set[str]] = {}
+        csv_groups: list[set[str]] = []
         for line in csv_f:
             samples = line.strip().split(",")
             # Use first sample as group ID
-            csv_groups[samples[0]] = set(samples[1:])
+            csv_groups.append(set(samples))
     # Read output pairs TSV
     with open(pairs_tsv) as tsv_f:
         head = next(tsv_f)
@@ -137,14 +137,14 @@ def check_sample_swaps(
         for line in tsv_f:
             data = line.strip().split("\t")
             sample_a, sample_b, concordance = (data[0], data[1], data[concordance_index])
-            if ((sample_a in csv_groups and sample_b in csv_groups[sample_a])
-                or (sample_b in csv_groups and sample_a in csv_groups[sample_b])):
-                verdict: str = "PASS"
-                if float(concordance) < swap_t:
-                    verdict = "FAIL"
-                    status += 1
-                print(f"{sample_a}\t{sample_b}\t{concordance}\t{verdict}", file=swap_f)
-
+            for sample_set in csv_groups:
+                if sample_a in sample_set and sample_b in sample_set:
+                    verdict: str = "PASS"
+                    if float(concordance) < swap_t:
+                        verdict = "FAIL"
+                        status += 1
+                    print(f"{sample_a}\t{sample_b}\t{concordance}\t{verdict}", file=swap_f)
+                    break
     return status
 
 
